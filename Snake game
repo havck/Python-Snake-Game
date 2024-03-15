@@ -1,0 +1,149 @@
+import os
+import random
+import msvcrt
+import time
+
+# height and width of the boundary
+width = 80
+height = 20
+
+# Snake head coordinates of snake (x-axis, y-axis)
+x = width // 2
+y = height // 2
+
+# Food coordinates
+fruitCordX = random.randint(0, width - 1)
+fruitCordY = random.randint(0, height - 1)
+
+# Variables
+playerScore = 0
+snakeTailX = [0] * 100
+snakeTailY = [0] * 100
+snakeTailLen = 0
+isGameOver = False
+
+# Enum for snake's direction
+class Direction:
+    STOP = 0
+    LEFT = 1
+    RIGHT = 2
+    UP = 3
+    DOWN = 4
+
+sDir = Direction.STOP
+
+# Function to initialize game variables
+def game_init():
+    global x, y, fruitCordX, fruitCordY, playerScore, snakeTailLen, isGameOver, sDir
+    isGameOver = False
+    sDir = Direction.STOP
+    x = width // 2
+    y = height // 2
+    fruitCordX = random.randint(0, width - 1)
+    fruitCordY = random.randint(0, height - 1)
+    playerScore = 0
+
+# Function for creating the game board & rendering
+def game_render(playerName):
+    os.system('cls')  # Clear the console
+
+    # Creating top walls with '-'
+    print('-' * (width + 2))
+
+    for i in range(height):
+        for j in range(width + 1):
+            if j == 0 or j == width:
+                print('|', end='')
+            elif i == y and j == x:
+                print('O', end='')
+            elif i == fruitCordY and j == fruitCordX:
+                print('#', end='')
+            else:
+                prTail = False
+                for k in range(snakeTailLen):
+                    if snakeTailX[k] == j and snakeTailY[k] == i:
+                        print('o', end='')
+                        prTail = True
+                if not prTail:
+                    print(' ', end='')
+        print()
+
+    # Creating bottom walls with '-'
+    print('-' * (width + 2))
+
+    # Display player's score
+    print("{}'s Score: {}".format(playerName, playerScore))
+
+# Function for updating the game state
+def update_game():
+    global x, y, snakeTailLen, isGameOver, sDir
+
+    prevX = snakeTailX[0]
+    prevY = snakeTailY[0]
+    prev2X, prev2Y = 0, 0
+    snakeTailX[0] = x
+    snakeTailY[0] = y
+
+    for i in range(1, snakeTailLen):
+        prev2X = snakeTailX[i]
+        prev2Y = snakeTailY[i]
+        snakeTailX[i] = prevX
+        snakeTailY[i] = prevY
+        prevX = prev2X
+        prevY = prev2Y
+
+    if sDir == Direction.LEFT:
+        x -= 1
+    elif sDir == Direction.RIGHT:
+        x += 1
+    elif sDir == Direction.UP:
+        y -= 1
+    elif sDir == Direction.DOWN:
+        y += 1
+
+    # Check for collision with walls
+    if x >= width or x < 0 or y >= height or y < 0:
+        isGameOver = True
+
+    # Check collision with tail
+    for i in range(snakeTailLen):
+        if snakeTailX[i] == x and snakeTailY[i] == y:
+            isGameOver = True
+
+    # Check collision with food
+    if x == fruitCordX and y == fruitCordY:
+        playerScore += 10
+        fruitCordX = random.randint(0, width - 1)
+        fruitCordY = random.randint(0, height - 1)
+        snakeTailLen += 1
+
+# Function to handle user input
+def user_input():
+    global sDir, isGameOver
+    if msvcrt.kbhit():
+        key = msvcrt.getch()
+        if key == b'a':
+            sDir = Direction.LEFT
+        elif key == b'd':
+            sDir = Direction.RIGHT
+        elif key == b'w':
+            sDir = Direction.UP
+        elif key == b's':
+            sDir = Direction.DOWN
+        elif key == b'x':
+            isGameOver = True
+
+# Main game loop
+def main():
+    playerName = input("Enter your name: ")
+    dfc = 100  # Default difficulty level
+
+    game_init()
+    while not isGameOver:
+        game_render(playerName)
+        user_input()
+        update_game()
+        time.sleep(dfc / 1000)  # Creating a delay based on difficulty level
+
+if __name__ == "__main__":
+    main()
